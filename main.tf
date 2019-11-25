@@ -52,5 +52,5 @@ resource "azurerm_key_vault" "mainvault" {
 }
 
 output "currentclient" {
-  data.azurerm_client_config.current
+  value = data.azurerm_client_config.current
 }
