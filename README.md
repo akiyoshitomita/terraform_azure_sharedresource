@@ -9,12 +9,18 @@ Azure環境をデプロイするための共有設定
 [環境変数の設定](https://docs.microsoft.com/ja-jp/azure/virtual-machines/linux/terraform-install-configure?toc=https%3A%2F%2Fdocs.microsoft.com%2Fja-jp%2Fazure%2Fterraform%2Ftoc.json&bc=https%3A%2F%2Fdocs.microsoft.com%2Fja-jp%2Fazure%2Fbread%2Ftoc.json)
 を参照して環境変数を設定
 
+変数を以下の通り設定
 
-{resource_group: リソースグループ名の定義
+|変数名|概要|省略値|
+|---|---|---|
+|`resource_group`|共有リソースを作成するリソースグループ名|(必須)|
+|`location`|Azureのロケーション名|`japaneast`|
+|`strage_diag_name`|共有リソースのストレージリソース名|(必須)|
+|`keyvault_name`|共有リソースのkeyvaultリソース名|(必須)|
+|`tag_owner`|タグ情報(利用者)の内容|(必須)|
+|`tag_application`|タグ情報(利用目的)の内容|(必須)|
+|`tag_expiration`|タグ情報(利用期限)の内容|(必須)|
 
-location: ロケーション名を指定（省略時: japaneast)
-
-tag_owner: 利用者名(タグに追加) tag_application: 利用目的を完結に記載(タグに追加) tag_expiration: 利用記述を記載(タグに追加)
 
 以下のコマンドを実行
 
