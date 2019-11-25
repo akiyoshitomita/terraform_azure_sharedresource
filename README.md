@@ -1,0 +1,2 @@
+# terraform_azure_sharedresource
+Azure環境をデプロイするための共有設定
