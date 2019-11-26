@@ -46,11 +46,26 @@ resource "azurerm_key_vault" "mainvault" {
       "get",
       "delete",
     ]
-
   }
   tags = local.common_tags
+  lifecycle {
+    ignore_changes = [ access_policy ]
+  }
 }
 
-output "currentclient" {
-  value = data.azurerm_client_config.current
+
+resource "azurerm_key_vault_secret" "config" {
+  name         = "config-diagname"
+  value        = var.strage_diag_name
+  key_vault_id = azurerm_key_vault.mainvault.id
+  tags = local.common_tags
+  lifecycle {
+    ignore_changes = [ value ]
+  }
+
 }
+
+# デバッグ用
+#output "currentclient" {
+#  value = data.azurerm_client_config.current
+#}
