@@ -71,3 +71,8 @@ variable "virtual_network_subnet_name" {
   type        = string
   default     = "subnet"
 }
+
+variable "keyvault" {
+  description = "設定情報を入れるためのキーコンテナの名前"
+  type        = string
+}

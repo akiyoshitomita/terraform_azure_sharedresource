@@ -18,7 +18,7 @@ resource "azurerm_resource_group" "rg" {
 # ストレージアカウント
 resource "azurerm_storage_account" "diagstrage" {
   name                      = var.strage_diag_name
-  resource_group_name       = var.resource_group
+  resource_group_name       = azurerm_resource_group.rg.name
   location                  = var.location
   account_tier              = "Standard"
   account_replication_type  = "RAGRS"
@@ -35,22 +35,22 @@ resource "azurerm_virtual_network" "virtualnet" {
   name                      = var.virtual_network
   address_space             = var.virtual_network_addressspace
   location                  = var.location
-  resource_group_name       = var.resource_group
+  resource_group_name       = azurerm_resource_group.rg.name
   tags                      = local.common_tags
 }
 
 # プライベートDNSゾーン
 resource "azurerm_private_dns_zone" "dnszone" {
   name                      = var.private_dns_zone
-  resource_group_name       = var.resource_group
+  resource_group_name       = azurerm_resource_group.rg.name
   tags                      = local.common_tags
 }
 
 # プライベートDNSゾーンと仮想ネットワークのリンク
 resource "azurerm_private_dns_zone_virtual_network_link" "dnslink" {
   name                      = var.private_dns_link
-  resource_group_name       = var.resource_group
-  private_dns_zone_name     = var.private_dns_zone
+  resource_group_name       = azurerm_resource_group.rg.name
+  private_dns_zone_name     = azurerm_private_dns_zone.dnszone.name
   virtual_network_id        = azurerm_virtual_network.virtualnet.id
   registration_enabled      = true  
   tags                      = local.common_tags
@@ -72,8 +72,8 @@ locals {
 resource "azurerm_subnet" "subnets" {
   count                     = length(local.subnets) 
   name                      = "${var.virtual_network_subnet_name}_${count.index}"
-  resource_group_name       = var.resource_group
-  virtual_network_name      = var.virtual_network
+  resource_group_name       = azurerm_resource_group.rg.name
+  virtual_network_name      = azurerm_virtual_network.virtualnet.name
   address_prefix            = local.subnets[count.index] 
 }
 
@@ -83,9 +83,9 @@ resource "azurerm_subnet" "subnets" {
 
 # keyvault (共有設定情報を保存する場所)
 resource "azurerm_key_vault" "mainvault" {
-  name                = "tomitavault"
+  name                = var.keyvault 
   location            = var.location
-  resource_group_name = var.resource_group
+  resource_group_name = azurerm_resource_group.rg.name
   tenant_id           = data.azurerm_client_config.current.tenant_id
   sku_name            = "standard"
 
@@ -109,7 +109,7 @@ resource "azurerm_key_vault" "mainvault" {
 # ストレージアカウント名を保存
 resource "azurerm_key_vault_secret" "configdiagname" {
   name         = "config-diagname"
-  value        = var.strage_diag_name
+  value        = azurerm_storage_account.diagstrage.name
   key_vault_id = azurerm_key_vault.mainvault.id
   tags = local.common_tags
   lifecycle {
@@ -131,7 +131,7 @@ resource "azurerm_key_vault_secret" "configlocation" {
 # Vネット名を保存
 resource "azurerm_key_vault_secret" "configvnet" {
   name         = "config-vnet"
-  value        = var.virtual_network
+  value        = azurerm_virtual_network.virtualnet.name
   key_vault_id = azurerm_key_vault.mainvault.id
   tags = local.common_tags
   lifecycle {
@@ -143,7 +143,7 @@ resource "azurerm_key_vault_secret" "configvnet" {
 # プライベートゾーン名を保存
 resource "azurerm_key_vault_secret" "configpdnszone" {
   name         = "config-pdnszone"
-  value        = var.private_dns_zone
+  value        = azurerm_private_dns_zone.dnszone.name
   key_vault_id = azurerm_key_vault.mainvault.id
   tags = local.common_tags
   lifecycle {
