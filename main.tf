@@ -1,9 +1,7 @@
 
 
 #　プロバイダの設定
-
 provider "azurerm" {
-
 }
 
 # リソースグループ
@@ -12,6 +10,10 @@ resource "azurerm_resource_group" "rg" {
   location  = var.location
   tags      = local.common_tags
 }
+
+# --------------------------------------------------------------------
+#  共通ストレージ設定
+# --------------------------------------------------------------------
 
 # ストレージアカウント
 resource "azurerm_storage_account" "diagstrage" {
@@ -24,6 +26,10 @@ resource "azurerm_storage_account" "diagstrage" {
   tags                      = local.common_tags
 }
 
+# --------------------------------------------------------------------
+#  共通ネットワーク設定
+# --------------------------------------------------------------------
+
 # 仮想ネットワーク
 resource "azurerm_virtual_network" "virtualnet" {
   name                      = var.virtual_network
@@ -32,6 +38,48 @@ resource "azurerm_virtual_network" "virtualnet" {
   resource_group_name       = var.resource_group
   tags                      = local.common_tags
 }
+
+# プライベートDNSゾーン
+resource "azurerm_private_dns_zone" "dnszone" {
+  name                      = var.private_dns_zone
+  resource_group_name       = var.resource_group
+  tags                      = local.common_tags
+}
+
+# プライベートDNSゾーンと仮想ネットワークのリンク
+resource "azurerm_private_dns_zone_virtual_network_link" "dnslink" {
+  name                      = var.private_dns_link
+  resource_group_name       = var.resource_group
+  private_dns_zone_name     = var.private_dns_zone
+  virtual_network_id        = azurerm_virtual_network.virtualnet.id
+  registration_enabled      = true  
+  tags                      = local.common_tags
+}  
+
+# サブネットの計算
+locals {
+  vnet_len = [ for net in var.virtual_network_addressspace: tonumber(regex("/(\\d+)", net)[0]) ]
+  subnets  = flatten( 
+               [ for i in range(length(var.virtual_network_addressspace)): 
+                 [ for j in range( var.viratul_network_subnets_count[i] ) :
+                    cidrsubnet(var.virtual_network_addressspace[i], 
+                               var.virtual_network_subnets_length - local.vnet_len[i], j) 
+                 ]
+               ])
+}
+
+# サブネット
+resource "azurerm_subnet" "subnets" {
+  count                     = length(local.subnets) 
+  name                      = "${var.virtual_network_subnet_name}_${count.index}"
+  resource_group_name       = var.resource_group
+  virtual_network_name      = var.virtual_network
+  address_prefix            = local.subnets[count.index] 
+}
+
+# --------------------------------------------------------------------
+#  共通設定情報の保存
+# --------------------------------------------------------------------
 
 # keyvault (共有設定情報を保存する場所)
 resource "azurerm_key_vault" "mainvault" {
@@ -45,14 +93,10 @@ resource "azurerm_key_vault" "mainvault" {
     tenant_id = data.azurerm_client_config.current.tenant_id
     object_id = data.azurerm_client_config.current.object_id
 
-    key_permissions = [
-      "create",
-      "get",
-   ]
-
     secret_permissions = [
       "set",
       "get",
+      "list",
       "delete",
     ]
   }
@@ -73,9 +117,6 @@ resource "azurerm_key_vault_secret" "configdiagname" {
   }
 }
 
-
-
-
 # ロケーション情報を保存
 resource "azurerm_key_vault_secret" "configlocation" {
   name         = "config-location"
@@ -86,6 +127,31 @@ resource "azurerm_key_vault_secret" "configlocation" {
     ignore_changes = [ value ]
   }
 }
+
+# Vネット名を保存
+resource "azurerm_key_vault_secret" "configvnet" {
+  name         = "config-vnet"
+  value        = var.virtual_network
+  key_vault_id = azurerm_key_vault.mainvault.id
+  tags = local.common_tags
+  lifecycle {
+    ignore_changes = [ value ]
+  }
+}
+
+
+# プライベートゾーン名を保存
+resource "azurerm_key_vault_secret" "configpdnszone" {
+  name         = "config-pdnszone"
+  value        = var.private_dns_zone
+  key_vault_id = azurerm_key_vault.mainvault.id
+  tags = local.common_tags
+  lifecycle {
+    ignore_changes = [ value ]
+  }
+}
+
+
 
 # 利用者を保存
 resource "azurerm_key_vault_secret" "configowner" {

@@ -36,31 +36,38 @@ variable "virtual_network" {
   type        = string
 }
 
+variable "private_dns_zone" {
+  description = "プライベートDNSのドメイン名"
+  type        = string
+}
+
+variable "private_dns_link" {
+  description = "プライベートDNSのリンク名"
+  type        = string
+  default     = "sharednetlink"
+}
+
+
 variable "virtual_network_addressspace" {
   description = "仮想ネットワークのアドレスレンジ"
   type        = list(string)
   default     = ["172.31.0.0/16"]
 }
 
-variable "virtual_network_subnets" {
-  description = "仮想ネットワークのサブネット"
-  type        = list(string)
-  default     = [
-                   "172.31.0.0/24", 
-                   "172.31.1.0/24", 
-                   "172.31.2.0/24", 
-                   "172.31.3.0/24", 
-                   "172.31.4.0/24", 
-                   "172.31.5.0/24", 
-                   "172.31.6.0/24", 
-                   "172.31.7.0/24", 
-                   "172.31.8.0/24", 
-                   "172.31.9.0/24", 
-                   "172.31.10.0/24", 
-                   "172.31.11.0/24", 
-                   "172.31.12.0/24", 
-                   "172.31.13.0/24", 
-                   "172.31.14.0/24", 
-                   "172.31.15.0/24", 
-               ]
+variable "virtual_network_subnets_length" {
+  description = "仮想ネットワークのサブネットのマスク長"
+  type        = number 
+  default     = 24
+}
+
+variable "viratul_network_subnets_count" {
+  description = "仮想ネットワークのサブネットの数"
+  type        = list(number)
+  default     = [16]
+}
+
+variable "virtual_network_subnet_name" {
+  description = "仮想ネットワークのサブネット名の接頭語"
+  type        = string
+  default     = "subnet"
 }

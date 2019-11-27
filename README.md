@@ -18,8 +18,12 @@ Azure環境をデプロイするための共有設定
 |`strage_diag_name`|共有リソースのストレージリソース名|(必須)|
 |`keyvault_name`|共有リソースのkeyvaultリソース名|(必須)|
 |`virtual_network`|バーチャルネットワーク名|(必須)|
+|`private_dns_zone`|プライベートDNSのゾーン名|(必須)|
+|`private_dns_link`|プライベートDNSリンク名|shardnetlink|
 |`virtual_network_addressspace`|バーチャルネットワークのアドレススペース|["172.31.0.0/16"]|
-|`virtual_network_subnet`|バーチャネルネットワーク内のサブネット|["172.31.0.0/24"～"172.31.15.0/24"]|
+|`virtual_network_subnets_length`|バーチャネルネットワーク内のサブネット長|24|
+|`virtual_network_subnets_count`|バーチャルネットワーク内のサブネットカウント|[16]|
+|`virtual_network_subnet_name`|パーちゃるネットワークのサブネット名（接頭語)|subnet|
 |`tag_owner`|タグ情報(利用者)の内容|(必須)|
 |`tag_application`|タグ情報(利用目的)の内容|(必須)|
 |`tag_expiration`|タグ情報(利用期限)の内容|(必須)|
